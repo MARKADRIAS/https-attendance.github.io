@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Attendance Tracker</title>
+    <style>
+      body {
+        font-family: Arial;
+        background: #6017b4;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1400px;
+        margin: auto;
+        background: rgba(201, 201, 201, 0.867);
+        padding: 20px;
+        border-radius: 10px;
+      }
+      .top-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .top-bar-right {
+        margin-left: auto;
+        display: flex;
+        gap: 10px;
+      }
+      input[type="text"],
+      input[type="date"] {
+        padding: 10px;
+      }
+      button {
+        padding: 10px 14px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .present {
+        background: #00c52e;
+        color: white;
+      }
+      .absent {
+        background: #ff0019;
+        color: white;
+      }
+      .late {
+        background: #000000;
+        color: white;
+      }
+      .save {
+        background: #007bff;
+        color: white;
+      }
+      .summary {
+        background: #6f42c1;
+        color: white;
+      }
+      .add {
+        background: #17a2b8;
+        color: white;
+      }
+      .edit {
+        background: #ffc107;
+        color: black;
+        margin-left: 5px;
+      }
+      .remove {
+        background: #000000;
+        color: white;
+        margin-left: 5px;
+      }
+      .seatplan-btn {
+        background: #000000;
+        color: white;
+      }
+      .logout {
+        background: #dc3545;
+        color: white;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border: 1px solid #858585;
+        padding: 10px;
+        text-align: center;
+      }
+      img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+      }
+      .status {
+        font-weight: bold;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-content {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        width: 500px;
+        max-height: 80%;
+        overflow-y: auto;
+      }
+      .modal-content input {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+      }
+
+      /* 👉 UPDATED SEAT PLAN STYLE */
+      .seat-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 78px);
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .seat {
+        background: #000000;
+        color: white;
+        padding: 20px;
+        text-align: center;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .seat:hover {
+        background: #0056b3;
+      }
+
+      .status-present {
+        color: green;
+        font-weight: bold;
+      }
+      .status-absent {
+        color: red;
+        font-weight: bold;
+      }
+      .status-late {
+        color: orange;
+        font-weight: bold;
+      }
+      .hidden {
+        display: none;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+      .seat-edit-bar {
+        margin-bottom: 5px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .seat-edit-toggle {
+        background: #ffc107;
+        color: black;
+      }
+
+      /* 🔒 USER MODE HIDES */
+      .user-hidden {
+        display: none !important;
+      }
+
+      .gender-group {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 10px;
+      }
+      .gender-group label {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Attendance Tracker</h2>
+
+      <div class="top-bar">
+        <input type="date" id="attendanceDate" />
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search student name or number..."
+        />
+        <button class="save" onclick="saveRecords()">Save Record</button>
+        <button class="summary" onclick="showSummary()">Summary</button>
+        <button class="add" id="addBtn" onclick="openAddStudent()">
+          Add Student
+        </button>
+        <button class="seatplan-btn" onclick="toggleSeatPlan()">
+          Seat Plan
+        </button>
+        <div class="top-bar-right">
+          <button class="logout" onclick="logout()">Logout</button>
+        </div>
+      </div>
+
+      <!-- Attendance List -->
+      <div id="attendanceView">
+        <h3>Attendance List</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Student Name</th>
+              <th>Gender</th>
+              <th>Student Number</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentTable"></tbody>
+        </table>
+      </div>
+
+      <!-- Seat Plan -->
+      <div id="seatPlanView" class="hidden">
+        <h3>Seat Plan (01–50)</h3>
+
+        <div class="seat-edit-bar">
+          <button
+            class="seat-edit-toggle"
+            id="seatEditToggleBtn"
+            onclick="toggleSeatEdit()"
+          >
+            Enable Seat Edit
+          </button>
+          <span id="seatEditStatus" style="font-weight: bold; color: #dc3545"
+            >Edit Mode: OFF</span
+          >
+        </div>
+
+        <div class="seat-grid" id="seatGrid"></div>
+      </div>
+    </div>
+
+    <!-- Add/Edit Student Modal -->
+    <div class="modal" id="studentFormModal">
+      <div class="modal-content">
+        <h3 id="formTitle">Add Student</h3>
+        <input type="text" id="formName" placeholder="Student Name" />
+
+        <!-- Gender Choice -->
+        <div class="gender-group">
+          <label><input type="radio" name="gender" value="Male" /> Male</label>
+          <label
+            ><input type="radio" name="gender" value="Female" /> Female</label
+          >
+        </div>
+
+        <input type="text" id="formNumber" placeholder="Student Number" />
+        <input type="file" id="formPhoto" accept="image/*" />
+        <div class="modal-actions">
+          <button class="add" id="formSaveBtn" onclick="saveStudentForm()">
+            Save
+          </button>
+          <button onclick="closeStudentForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- View/Edit Seat Modal -->
+    <div class="modal" id="studentModal">
+      <div class="modal-content">
+        <h3 id="modalTitle">Student Info</h3>
+        <p><strong>Name:</strong> <span id="modalName"></span></p>
+        <p><strong>Student Number:</strong> <span id="modalNumber"></span></p>
+        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+
+        <div id="editForm" class="hidden">
+          <input type="text" id="editName" placeholder="New Name" />
+          <input type="text" id="editNumber" placeholder="New Student Number" />
+          <div class="modal-actions">
+            <button class="add" onclick="saveSeatEdit()">Save Changes</button>
+          </div>
+        </div>
+
+        <button onclick="closeModal()">Close</button>
+      </div>
+    </div>
+
+    <!-- Summary Modal -->
+    <div class="modal" id="summaryModal">
+      <div class="modal-content">
+        <h3>Attendance Summary</h3>
+        <table
+          border="1"
+          style="width: 100%; border-collapse: collapse; margin-top: 10px"
+        >
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Gender</th>
+              <th>Student Number</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Late</th>
+              <th>Total</th>
+              <th>Dates</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTable"></tbody>
+        </table>
+        <button onclick="closeSummary()">Close</button>
+      </div>
+    </div>
+
+    <script>
+      // 🔐 ROLE CHECK
+      const role = localStorage.getItem("loggedInRole");
+      if (!role) {
+        window.location.href = "àgay.html";
+      }
+
+      // ===== STORAGE =====
+      let studentsByDate =
+        JSON.parse(localStorage.getItem("studentsByDate")) || {};
+      let attendanceByDate =
+        JSON.parse(localStorage.getItem("attendanceByDate")) || {};
+      let seatPlanByDate =
+        JSON.parse(localStorage.getItem("seatPlanByDate")) || {};
+
+      const dateInput = document.getElementById("attendanceDate");
+      dateInput.value = new Date().toISOString().split("T")[0];
+
+      // ===== USER MODE RESTRICTIONS =====
+      function applyRoleRestrictions() {
+        if (role === "user") {
+          document.getElementById("addBtn").classList.add("user-hidden");
+          document
+            .getElementById("seatEditToggleBtn")
+            .classList.add("user-hidden");
+        }
+      }
+
+      // ===== VIEW TOGGLE =====
+      function toggleSeatPlan() {
+        const attendanceDiv = document.getElementById("attendanceView");
+        const seatDiv = document.getElementById("seatPlanView");
+        if (attendanceDiv.classList.contains("hidden")) {
+          attendanceDiv.classList.remove("hidden");
+          seatDiv.classList.add("hidden");
+        } else {
+          attendanceDiv.classList.add("hidden");
+          seatDiv.classList.remove("hidden");
+          generateSeatGrid();
+        }
+      }
+
+      // ===== LOGOUT =====
+      function logout() {
+        if (confirm("Are you sure you want to logout?")) {
+          localStorage.removeItem("loggedInRole");
+          window.location.href = "agay12.html";
+        }
+      }
+
+      // ===== SEAT EDIT MODE =====
+      let seatEditMode = false;
+      let currentSeatIndex = null;
+
+      function toggleSeatEdit() {
+        if (role === "user") return;
+        seatEditMode = !seatEditMode;
+        document.getElementById("seatEditStatus").textContent = seatEditMode
+          ? "Edit Mode: ON"
+          : "Edit Mode: OFF";
+        document.getElementById("seatEditStatus").style.color = seatEditMode
+          ? "#28a745"
+          : "#dc3545";
+        document.getElementById("seatEditToggleBtn").textContent = seatEditMode
+          ? "Disable Seat Edit"
+          : "Enable Seat Edit";
+      }
+
+      // ===== ATTENDANCE =====
+      function loadStudentsForDate(date) {
+        const dayStudents = studentsByDate[date] || [];
+        const dayAttendance = attendanceByDate[date] || {};
+        displayStudents(dayStudents, dayAttendance);
+        if (
+          !document.getElementById("seatPlanView").classList.contains("hidden")
+        ) {
+          generateSeatGrid();
+        }
+      }
+
+      function displayStudents(dayStudents, dayAttendance) {
+        const filter = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const table = document.getElementById("studentTable");
+        table.innerHTML = "";
+
+        dayStudents
+          .filter(
+            (s) =>
+              s.name.toLowerCase().includes(filter) ||
+              s.number.includes(filter),
+          )
+          .forEach((student) => {
+            const record = dayAttendance[student.id];
+            const status = record ? record.status : "Not Marked";
+            const time = record && record.time ? record.time : "--";
+
+            const actionButtons =
+              role === "user"
+                ? ""
+                : `
+        <button class="present" onclick="markStatus(${student.id},'Present')">Present</button>
+        <button class="absent" onclick="markStatus(${student.id},'Absent')">Absent</button>
+        <button class="late" onclick="markStatus(${student.id},'Late')">Late</button>
+        <button class="edit" onclick="openEditStudent(${student.id})">Edit</button>
+        <button class="remove" onclick="removeStudent(${student.id})">Remove</button>
+      `;
+
+            const row = document.createElement("tr");
+            row.innerHTML = `
+        <td><img src="${student.photo}" alt="Photo"></td>
+        <td>${student.name}</td>
+        <td>${student.gender || "—"}</td>
+        <td>${student.number}</td>
+        <td>${time}</td>
+        <td class="status" id="status-${student.id}">${status}</td>
+        <td>${actionButtons}</td>
+      `;
+            table.appendChild(row);
+          });
+      }
+
+      function markStatus(studentId, status) {
+        if (role === "user") return;
+        const date = dateInput.value;
+        if (!attendanceByDate[date]) attendanceByDate[date] = {};
+
+        let time = "--";
+        if (status === "Present" || status === "Late") {
+          const now = new Date();
+          time = now.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+
+        attendanceByDate[date][studentId] = { status, time };
+        localStorage.setItem(
+          "attendanceByDate",
+          JSON.stringify(attendanceByDate),
+        );
+
+        document.getElementById(`status-${studentId}`).textContent = status;
+        loadStudentsForDate(date);
+      }
+
+      function saveRecords() {
+        localStorage.setItem("studentsByDate", JSON.stringify(studentsByDate));
+        localStorage.setItem(
+          "attendanceByDate",
+          JSON.stringify(attendanceByDate),
+        );
+        localStorage.setItem("seatPlanByDate", JSON.stringify(seatPlanByDate));
+        alert("Saved for " + dateInput.value);
+      }
+
+      // ===== ADD / EDIT STUDENT =====
+      let editingStudentId = null;
+
+      function openAddStudent() {
+        if (role === "user") return;
+        editingStudentId = null;
+        document.getElementById("formTitle").textContent = "Add Student";
+        document.getElementById("formName").value = "";
+        document.getElementById("formNumber").value = "";
+        document
+          .querySelectorAll('input[name="gender"]')
+          .forEach((r) => (r.checked = false));
+        document.getElementById("formPhoto").value = "";
+        document.getElementById("studentFormModal").style.display = "flex";
+      }
+
+      function openEditStudent(studentId) {
+        if (role === "user") return;
+        const date = dateInput.value;
+        const student = (studentsByDate[date] || []).find(
+          (s) => s.id === studentId,
+        );
+        if (!student) return;
+        editingStudentId = studentId;
+        document.getElementById("formTitle").textContent = "Edit Student";
+        document.getElementById("formName").value = student.name;
+        document.getElementById("formNumber").value = student.number;
+        document.querySelectorAll('input[name="gender"]').forEach((r) => {
+          r.checked = r.value === student.gender;
+        });
+        document.getElementById("formPhoto").value = "";
+        document.getElementById("studentFormModal").style.display = "flex";
+      }
+
+      function closeStudentForm() {
+        document.getElementById("studentFormModal").style.display = "none";
+      }
+
+      function saveStudentForm() {
+        if (role === "user") return;
+        const name = document.getElementById("formName").value.trim();
+        const number = document.getElementById("formNumber").value.trim();
+        const genderInput = document.querySelector(
+          'input[name="gender"]:checked',
+        );
+        const gender = genderInput ? genderInput.value : "";
+        const fileInput = document.getElementById("formPhoto");
+        if (!name || !number || !gender) {
+          alert("Please fill in name, gender, and student number.");
+          return;
+        }
+        const date = dateInput.value;
+        if (!studentsByDate[date]) studentsByDate[date] = [];
+
+        if (fileInput.files.length > 0) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            saveStudentData(name, number, gender, e.target.result);
+          };
+          reader.readAsDataURL(fileInput.files[0]);
+        } else {
+          saveStudentData(name, number, gender, null);
+        }
+      }
+
+      function saveStudentData(name, number, gender, photo) {
+        const date = dateInput.value;
+        if (editingStudentId === null) {
+          const newStudent = {
+            id: Date.now(),
+            name,
+            number,
+            gender,
+            photo: photo || "https://via.placeholder.com/50",
+          };
+          studentsByDate[date].push(newStudent);
+
+          if (!seatPlanByDate[date]) seatPlanByDate[date] = [];
+          seatPlanByDate[date].push(newStudent.id);
+        } else {
+          const student = studentsByDate[date].find(
+            (s) => s.id === editingStudentId,
+          );
+          if (student) {
+            student.name = name;
+            student.number = number;
+            student.gender = gender;
+            if (photo) student.photo = photo;
+          }
+        }
+        saveRecords();
+        loadStudentsForDate(date);
+        closeStudentForm();
+      }
+
+      // ===== REMOVE =====
+      function removeStudent(studentId) {
+        if (role === "user") return;
+        if (!confirm("Remove this student?")) return;
+        const date = dateInput.value;
+        if (studentsByDate[date]) {
+          studentsByDate[date] = studentsByDate[date].filter(
+            (s) => s.id !== studentId,
+          );
+        }
+        if (attendanceByDate[date]) delete attendanceByDate[date][studentId];
+        if (seatPlanByDate[date]) {
+          seatPlanByDate[date] = seatPlanByDate[date].filter(
+            (id) => id !== studentId,
+          );
+        }
+        saveRecords();
+        loadStudentsForDate(date);
+      }
+
+      // ===== SEARCH / DATE =====
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", () => loadStudentsForDate(dateInput.value));
+      dateInput.addEventListener("change", () =>
+        loadStudentsForDate(dateInput.value),
+      );
+
+      // ===== SUMMARY (FIXED — NO DUPLICATES + TOTAL COLUMN) =====
+      function showSummary() {
+        const summary = {};
+
+        // Loop through all attendance records by date
+        for (let date in attendanceByDate) {
+          const dayAttendance = attendanceByDate[date];
+
+          for (let studentId in dayAttendance) {
+            const record = dayAttendance[studentId];
+
+            // Find student info (from any date list)
+            let studentInfo = null;
+            for (let d in studentsByDate) {
+              const found = (studentsByDate[d] || []).find(
+                (s) => s.id == studentId,
+              );
+              if (found) {
+                studentInfo = found;
+                break;
+              }
+            }
+            if (!studentInfo) continue;
+
+            if (!summary[studentId]) {
+              summary[studentId] = {
+                name: studentInfo.name,
+                gender: studentInfo.gender || "",
+                number: studentInfo.number,
+                Present: 0,
+                Absent: 0,
+                Late: 0,
+                dates: [],
+              };
+            }
+
+            summary[studentId][record.status]++;
+            summary[studentId].dates.push(
+              record.status === "Absent"
+                ? `${date}: Absent`
+                : `${date}: ${record.status} (${record.time})`,
+            );
+          }
+        }
+
+        const summaryTable = document.getElementById("summaryTable");
+        summaryTable.innerHTML = "";
+
+        for (let studentId in summary) {
+          const data = summary[studentId];
+          const total = data.Present + data.Absent + data.Late;
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+      <td>${data.name}</td>
+      <td>${data.gender || "—"}</td>
+      <td>${data.number}</td>
+      <td>${data.Present}</td>
+      <td>${data.Absent}</td>
+      <td>${data.Late}</td>
+      <td><strong>${total}</strong></td>
+      <td>${data.dates.join(", ")}</td>
+    `;
+          summaryTable.appendChild(row);
+        }
+
+        document.getElementById("summaryModal").style.display = "flex";
+      }
+
+      function closeSummary() {
+        document.getElementById("summaryModal").style.display = "none";
+      }
+
+      // ===== SEAT PLAN =====
+      function generateSeatGrid() {
+        const seatGrid = document.getElementById("seatGrid");
+        seatGrid.innerHTML = "";
+        const date = dateInput.value;
+
+        if (!seatPlanByDate[date]) {
+          seatPlanByDate[date] = (studentsByDate[date] || []).map((s) => s.id);
+        }
+
+        for (let i = 0; i < 50; i++) {
+          const seatDiv = document.createElement("div");
+          seatDiv.className = "seat";
+
+          const seatNumber = String(i + 1).padStart(2, "0");
+          seatDiv.textContent = seatNumber;
+
+          seatDiv.onclick = () => seatClicked(i);
+          seatGrid.appendChild(seatDiv);
+        }
+      }
+
+      function seatClicked(seatIndex) {
+        const date = dateInput.value;
+        const seatArray = seatPlanByDate[date];
+        const studentId = seatArray[seatIndex];
+        if (!studentId) {
+          alert("No student assigned to this seat.");
+          return;
+        }
+
+        const student = (studentsByDate[date] || []).find(
+          (s) => s.id === studentId,
+        );
+        if (!student) return;
+
+        if (seatEditMode && role !== "user") {
+          currentSeatIndex = seatIndex;
+          document.getElementById("modalTitle").textContent =
+            "Edit Seat Student";
+          document.getElementById("editForm").classList.remove("hidden");
+          document.getElementById("editName").value = student.name;
+          document.getElementById("editNumber").value = student.number;
+        } else {
+          document.getElementById("modalTitle").textContent = "Student Info";
+          document.getElementById("modalName").textContent = student.name;
+          document.getElementById("modalNumber").textContent = student.number;
+          const record =
+            attendanceByDate[date] && attendanceByDate[date][student.id];
+          const status = record ? record.status : "Not Marked";
+          const statusSpan = document.getElementById("modalStatus");
+          statusSpan.textContent = status;
+          statusSpan.className = "";
+          if (status === "Present") statusSpan.className = "status-present";
+          else if (status === "Absent") statusSpan.className = "status-absent";
+          else if (status === "Late") statusSpan.className = "status-late";
+          document.getElementById("editForm").classList.add("hidden");
+        }
+        document.getElementById("studentModal").style.display = "flex";
+      }
+
+      function saveSeatEdit() {
+        if (role === "user") return;
+        const date = dateInput.value;
+        const seatArray = seatPlanByDate[date];
+        if (currentSeatIndex == null) return;
+
+        const studentId = seatArray[currentSeatIndex];
+        const student = (studentsByDate[date] || []).find(
+          (s) => s.id === studentId,
+        );
+        if (!student) return;
+
+        student.name = document.getElementById("editName").value.trim();
+        student.number = document.getElementById("editNumber").value.trim();
+
+        saveRecords();
+        loadStudentsForDate(date);
+        generateSeatGrid();
+        document.getElementById("studentModal").style.display = "none";
+        currentSeatIndex = null;
+      }
+
+      function closeModal() {
+        document.getElementById("studentModal").style.display = "none";
+        document.getElementById("editForm").classList.add("hidden");
+      }
+
+      // ===== INITIAL LOAD =====
+      applyRoleRestrictions();
+      loadStudentsForDate(dateInput.value);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin & User Login System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-image: url("hotdog.jpg");
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .container {
+        max-width: 420px;
+        width: 100%;
+        background: url("https://images.unsplash.com/photo-1521791136064-7986c2920216")
+          center/cover no-repeat;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        position: relative;
+      }
+
+      .container::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 12px;
+        z-index: 0;
+      }
+
+      .container > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      h2,
+      h3 {
+        text-align: center;
+      }
+
+      button {
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .btn-main {
+        width: 100%;
+        background: #000000;
+        color: white;
+        margin-top: 10px;
+      }
+      .btn-back {
+        width: 100%;
+        background: #000000;
+        color: white;
+        margin-top: 10px;
+      }
+
+      .btn-resend {
+        width: 100%;
+        background: #f8b627;
+        color: rgb(0, 0, 0);
+        margin-top: 10px;
+      }
+
+      input {
+        width: 95%;
+        padding: 10px;
+        margin-top: 8px;
+        border-radius: 6px;
+        border: 1px solid #000000;
+      }
+
+      .link {
+        color: blue;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: underline;
+      }
+
+      .center {
+        text-align: center;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .code-box {
+        background: #5d9eff;
+        padding: 10px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+        letter-spacing: 5px;
+        border-radius: 6px;
+        margin: 8% 0;
+      }
+
+      .error {
+        color: red;
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      .success {
+        color: green;
+        font-size: 14px;
+        margin-top: 5px;
+      }
+
+      .countdown {
+        text-align: center;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+
+      .toggle {
+        font-size: 13px;
+        cursor: pointer;
+        color: blue;
+        display: inline-block;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Role Selection -->
+      <div id="roleSelection">
+        <h2>Select Account</h2>
+        <button class="btn-main" onclick="showAdmin()">Admin</button>
+        <button class="btn-main" onclick="showUser()">User</button>
+      </div>
+
+      <!-- Admin Login -->
+      <div id="adminLogin" class="hidden">
+        <h3>Admin Login</h3>
+        <input type="text" id="adminUsername" placeholder="Username" />
+        <input type="password" id="adminPassword" placeholder="Password" />
+        <label class="toggle"
+          ><input type="checkbox" onclick="toggleLoginPassword('admin')" /> Show
+          Password</label
+        >
+        <button class="btn-main" type="button" onclick="login('admin')">
+          Login
+        </button>
+        <p class="center">
+          <span class="link" onclick="showCreate('admin')">Create Account</span>
+        </p>
+        <p class="center">
+          <span class="link" onclick="showForgot('admin')">Forgot?</span>
+        </p>
+        <button class="btn-back" type="button" onclick="goBack()">Back</button>
+      </div>
+
+      <!-- User Login -->
+      <div id="userLogin" class="hidden">
+        <h3>User Login</h3>
+        <input type="text" id="userUsername" placeholder="Username" />
+        <input type="password" id="userPassword" placeholder="Password" />
+        <label class="toggle"
+          ><input type="checkbox" onclick="toggleLoginPassword('user')" /> Show
+          Password</label
+        >
+        <button class="btn-main" type="button" onclick="login('user')">
+          Login
+        </button>
+        <p class="center">
+          <span class="link" onclick="showCreate('user')">Register</span>
+        </p>
+        <p class="center">
+          <span class="link" onclick="showForgot('user')">Forgot?</span>
+        </p>
+        <button class="btn-back" type="button" onclick="goBack()">Back</button>
+      </div>
+
+      <!-- Create Account Form -->
+      <div id="createForm" class="hidden">
+        <h3 id="createTitle">Create Account</h3>
+        <input type="text" id="newUsername" placeholder="Username" />
+        <input type="password" id="newPassword" placeholder="Password" />
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="Confirm Password"
+        />
+        <label class="toggle"
+          ><input type="checkbox" onclick="togglePasswords()" /> Show
+          Password</label
+        >
+        <div id="createMessage" class="error"></div>
+        <button class="btn-main" type="button" onclick="createAccount()">
+          Create
+        </button>
+        <button class="btn-back" type="button" onclick="goBack()">Back</button>
+      </div>
+
+      <!-- Forgot Username Form -->
+      <div id="forgotForm" class="hidden">
+        <h3>Forgot Password</h3>
+        <p>Please enter your username:</p>
+        <input type="text" id="forgotUsername" />
+        <div id="forgotError" class="error"></div>
+        <button class="btn-main" type="button" onclick="checkUsername()">
+          Submit
+        </button>
+        <button class="btn-back" type="button" onclick="goBack()">Back</button>
+      </div>
+
+      <!-- Verification Form -->
+      <div id="verificationForm" class="hidden">
+        <h3>Verification</h3>
+        <div id="countdownText" class="countdown"></div>
+        <label>Verification Code:</label>
+        <div id="generatedCode" class="code-box hidden"></div>
+        <input
+          type="text"
+          id="enteredCode"
+          placeholder="Enter code here"
+          class="hidden"
+        />
+        <div id="verifyMessage" class="error"></div>
+        <button
+          class="btn-main hidden"
+          id="verifyBtn"
+          type="button"
+          onclick="verifyCode()"
+        >
+          Verify
+        </button>
+        <button
+          class="btn-resend hidden"
+          id="resendBtn"
+          type="button"
+          onclick="resendCode()"
+        >
+          Resend Code
+        </button>
+        <button class="btn-back" type="button" onclick="goBack()">Back</button>
+      </div>
+
+      <!-- Reset Password Form -->
+      <div id="resetForm" class="hidden">
+        <h3>Reset Password</h3>
+        <input type="password" id="resetPassword" placeholder="New Password" />
+        <input
+          type="password"
+          id="confirmResetPassword"
+          placeholder="Confirm Password"
+        />
+        <label class="toggle"
+          ><input type="checkbox" onclick="toggleResetPasswords()" /> Show
+          Password</label
+        >
+        <div id="resetMessage" class="error"></div>
+        <button class="btn-main" type="button" onclick="resetPassword()">
+          Reset Password
+        </button>
+        <button class="btn-back" type="button" onclick="goBack()">Back</button>
+      </div>
+    </div>
+
+    <script>
+      let currentRole = "";
+      let correctCode = "";
+      let timer;
+      let countdownTimer;
+      let expireTimer;
+      let resetUsername = "";
+
+      // Load accounts from localStorage
+      function getAccounts(role) {
+        return JSON.parse(localStorage.getItem(role + "_accounts")) || [];
+      }
+
+      function saveAccounts(role, accounts) {
+        localStorage.setItem(role + "_accounts", JSON.stringify(accounts));
+      }
+
+      function showAdmin() {
+        hideAll();
+        document.getElementById("adminLogin").classList.remove("hidden");
+      }
+
+      function showUser() {
+        hideAll();
+        document.getElementById("userLogin").classList.remove("hidden");
+      }
+
+      function showCreate(role) {
+        currentRole = role;
+        hideAll();
+        document.getElementById("createForm").classList.remove("hidden");
+        document.getElementById("createTitle").textContent =
+          role === "admin" ? "Create Admin Account" : "Register User Account";
+        document.getElementById("createMessage").textContent = "";
+        document.getElementById("newUsername").value = "";
+        document.getElementById("newPassword").value = "";
+        document.getElementById("confirmPassword").value = "";
+      }
+
+      function goBack() {
+        hideAll();
+        document.getElementById("roleSelection").classList.remove("hidden");
+      }
+
+      function hideAll() {
+        document.getElementById("roleSelection").classList.add("hidden");
+        document.getElementById("adminLogin").classList.add("hidden");
+        document.getElementById("userLogin").classList.add("hidden");
+        document.getElementById("createForm").classList.add("hidden");
+        document.getElementById("forgotForm").classList.add("hidden");
+        document.getElementById("verificationForm").classList.add("hidden");
+        document.getElementById("resetForm").classList.add("hidden");
+      }
+
+      function togglePasswords() {
+        const p1 = document.getElementById("newPassword");
+        const p2 = document.getElementById("confirmPassword");
+        const type = p1.type === "password" ? "text" : "password";
+        p1.type = type;
+        p2.type = type;
+      }
+
+      function toggleResetPasswords() {
+        const p1 = document.getElementById("resetPassword");
+        const p2 = document.getElementById("confirmResetPassword");
+        const type = p1.type === "password" ? "text" : "password";
+        p1.type = type;
+        p2.type = type;
+      }
+
+      function toggleLoginPassword(role) {
+        const input =
+          role === "admin"
+            ? document.getElementById("adminPassword")
+            : document.getElementById("userPassword");
+        input.type = input.type === "password" ? "text" : "password";
+      }
+
+      function createAccount() {
+        const username = document.getElementById("newUsername").value.trim();
+        const password = document.getElementById("newPassword").value.trim();
+        const confirm = document.getElementById("confirmPassword").value.trim();
+        const msg = document.getElementById("createMessage");
+
+        if (!username || !password || !confirm) {
+          msg.textContent = "Please fill in all fields.";
+          msg.className = "error";
+          return;
+        }
+
+        if (password !== confirm) {
+          msg.textContent = "Passwords do not match.";
+          msg.className = "error";
+          return;
+        }
+
+        let accounts = getAccounts(currentRole);
+
+        if (accounts.some((acc) => acc.username === username)) {
+          msg.textContent = "Username already exists.";
+          msg.className = "error";
+          return;
+        }
+
+        accounts.push({ username, password });
+        saveAccounts(currentRole, accounts);
+
+        msg.textContent = "Account created successfully!";
+        msg.className = "success";
+
+        setTimeout(() => {
+          goBack();
+        }, 1200);
+      }
+
+      function login(role) {
+        const username =
+          role === "admin"
+            ? document.getElementById("adminUsername").value.trim()
+            : document.getElementById("userUsername").value.trim();
+        const password =
+          role === "admin"
+            ? document.getElementById("adminPassword").value.trim()
+            : document.getElementById("userPassword").value.trim();
+
+        let accounts = getAccounts(role);
+        const found = accounts.find(
+          (acc) => acc.username === username && acc.password === password,
+        );
+
+        if (found) {
+          localStorage.setItem("loggedInRole", role);
+          window.location.href = "Group3attendance.html";
+        } else {
+          alert("Invalid username or password.");
+          if (role === "admin") {
+            document.getElementById("adminUsername").value = "";
+            document.getElementById("adminPassword").value = "";
+          } else {
+            document.getElementById("userUsername").value = "";
+            document.getElementById("userPassword").value = "";
+          }
+        }
+      }
+
+      function showForgot(role) {
+        currentRole = role;
+        hideAll();
+        document.getElementById("forgotForm").classList.remove("hidden");
+        document.getElementById("forgotUsername").value = "";
+        document.getElementById("forgotError").textContent = "";
+      }
+
+      function checkUsername() {
+        const username = document.getElementById("forgotUsername").value.trim();
+        const errorBox = document.getElementById("forgotError");
+
+        let accounts = getAccounts(currentRole);
+        const exists = accounts.some((acc) => acc.username === username);
+
+        if (!exists) {
+          errorBox.textContent = "Invalid username";
+          return;
+        }
+
+        resetUsername = username;
+        startCountdown();
+      }
+
+      // ⏳ COUNTDOWN BEFORE SENDING CODE (10 SECONDS)
+      function startCountdown() {
+        hideAll();
+        document.getElementById("verificationForm").classList.remove("hidden");
+
+        let seconds = 10;
+        document.getElementById("countdownText").textContent =
+          "Sending code in " + seconds + " seconds...";
+
+        document.getElementById("generatedCode").classList.add("hidden");
+        document.getElementById("enteredCode").classList.add("hidden");
+        document.getElementById("verifyBtn").classList.add("hidden");
+        document.getElementById("resendBtn").classList.add("hidden");
+
+        clearInterval(countdownTimer);
+        countdownTimer = setInterval(() => {
+          seconds--;
+          document.getElementById("countdownText").textContent =
+            "Sending code in " + seconds + " seconds...";
+          if (seconds <= 0) {
+            clearInterval(countdownTimer);
+            sendVerificationCode();
+          }
+        }, 1000);
+      }
+
+      // 📩 SEND CODE + ⏳ START EXPIRATION COUNTDOWN
+      function sendVerificationCode() {
+        correctCode = Math.floor(100000 + Math.random() * 900000).toString();
+        document.getElementById("generatedCode").textContent = correctCode;
+        document.getElementById("generatedCode").classList.remove("hidden");
+        document.getElementById("enteredCode").classList.remove("hidden");
+        document.getElementById("verifyBtn").classList.remove("hidden");
+        document.getElementById("verifyMessage").textContent = "";
+        document.getElementById("resendBtn").classList.add("hidden");
+
+        let expireSeconds = 10;
+        document.getElementById("countdownText").textContent =
+          "Code expires in " + expireSeconds + " seconds...";
+
+        clearInterval(expireTimer);
+        expireTimer = setInterval(() => {
+          expireSeconds--;
+          document.getElementById("countdownText").textContent =
+            "Code expires in " + expireSeconds + " seconds...";
+          if (expireSeconds <= 0) {
+            clearInterval(expireTimer);
+            correctCode = "";
+            document.getElementById("generatedCode").textContent = "EXPIRED";
+            document.getElementById("countdownText").textContent =
+              "Verification code expired.";
+            document.getElementById("resendBtn").classList.remove("hidden");
+          }
+        }, 1000);
+      }
+
+      function resendCode() {
+        startCountdown();
+      }
+
+      function verifyCode() {
+        const entered = document.getElementById("enteredCode").value.trim();
+        const msg = document.getElementById("verifyMessage");
+
+        if (!correctCode) {
+          msg.textContent = "Code expired. Please resend.";
+          msg.className = "error";
+          return;
+        }
+
+        if (entered === correctCode) {
+          msg.textContent = "Verified! Please reset your password.";
+          msg.className = "success";
+          setTimeout(() => {
+            hideAll();
+            document.getElementById("resetForm").classList.remove("hidden");
+          }, 800);
+        } else {
+          msg.textContent = "Incorrect code.";
+          msg.className = "error";
+        }
+      }
+
+      function resetPassword() {
+        const newPass = document.getElementById("resetPassword").value.trim();
+        const confirmPass = document
+          .getElementById("confirmResetPassword")
+          .value.trim();
+        const msg = document.getElementById("resetMessage");
+
+        if (!newPass || !confirmPass) {
+          msg.textContent = "Please fill in both fields.";
+          msg.className = "error";
+          return;
+        }
+
+        if (newPass !== confirmPass) {
+          msg.textContent = "Passwords do not match.";
+          msg.className = "error";
+          return;
+        }
+
+        let accounts = getAccounts(currentRole);
+        accounts = accounts.map((acc) => {
+          if (acc.username === resetUsername) {
+            return { username: acc.username, password: newPass };
+          }
+          return acc;
+        });
+        saveAccounts(currentRole, accounts);
+
+        msg.textContent = "Password reset successful!";
+        msg.className = "success";
+
+        setTimeout(() => {
+          goBack();
+        }, 1200);
+      }
+    </script>
+  </body>
+</html>
